@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Salem AI Crypto Terminal — Demo</title>
+<style>
+:root{color-scheme:dark;--bg:#090d14;--panel:#111925;--line:#243244;--text:#eaf0f8;--muted:#91a0b5;--green:#36d399;--red:#fb7185;--blue:#7aa2ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 15% 0,#17243a 0,transparent 35%),var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
+header{padding:22px 18px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{font-size:18px;font-weight:800;letter-spacing:.3px}.brand span{color:var(--green)}.sub{color:var(--muted);font-size:12px;margin-top:4px}
+.pill{border:1px solid #27654f;color:var(--green);padding:7px 10px;border-radius:99px;font-size:12px}
+main{max-width:1180px;margin:auto;padding:18px;display:grid;gap:15px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.panel,.coin{background:linear-gradient(145deg,#121c2a,#0f1621);border:1px solid var(--line);border-radius:16px;padding:16px;min-width:0}
+.label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}.price{font-size:clamp(20px,3vw,29px);font-weight:750;margin:9px 0 4px;overflow-wrap:anywhere}.change{font-size:13px}.positive{color:var(--green)}.negative{color:var(--red)}.muted{color:var(--muted)}
+.section-title{font-weight:750;font-size:16px;margin-bottom:12px}.split{display:grid;grid-template-columns:1.35fr 1fr;gap:15px}
+canvas{width:100%;height:230px;display:block}.signal{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}.signal:last-child{border-bottom:0}
+.tag{border-radius:7px;padding:5px 8px;font-size:12px;font-weight:750;background:#243244}.tag.buy{background:#103b30;color:var(--green)}.tag.sell{background:#451d29;color:var(--red)}.tag.wait{background:#332c19;color:#facc65}
+button,select{background:#1a2738;color:var(--text);border:1px solid #33445a;border-radius:9px;padding:10px 12px;font:inherit}
+button{cursor:pointer}button:hover{border-color:var(--blue)}.controls{display:flex;gap:9px;flex-wrap:wrap}.small{font-size:12px;color:var(--muted);line-height:1.5}
+.footer{font-size:12px;color:var(--muted);line-height:1.6;padding:4px 2px 20px}.error{color:#fda4af;font-size:12px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.split{grid-template-columns:1fr}main{padding:12px}header{padding:17px 14px}canvas{height:190px}}
+</style>
+</head>
+<body>
+<header>
+  <div><div class="brand">SALEM <span>AI</span> CRYPTO TERMINAL</div><div class="sub">Marché public · Analyse simple · Portefeuille simulé</div></div>
+  <div class="pill">● MODE DÉMO — AUCUN ORDRE RÉEL</div>
+</header>
+<main>
+  <div class="controls">
+    <button id="refresh">↻ Actualiser les données</button>
+    <label class="small" style="align-self:center">Mise de départ simulée : <strong>1 000 USDT</strong></label>
+  </div>
+  <div id="status" class="small">Connexion aux données publiques…</div>
+  <section class="grid" id="coins">
+    <div class="coin"><div class="label">Bitcoin · BTC/USDT</div><div class="price">Chargement…</div></div>
+    <div class="coin"><div class="label">Ethereum · ETH/USDT</div><div class="price">Chargement…</div></div>
+    <div class="coin"><div class="label">Solana · SOL/USDT</div><div class="price">Chargement…</div></div>
+  </section>
+  <section class="split">
+    <div class="panel"><div class="section-title">BTC/USDT · 24 dernières bougies horaires</div><canvas id="chart" width="900" height="300" aria-label="Graphique simplifié du Bitcoin"></canvas><div class="small">Graphique indicatif basé sur les chandeliers horaires publics. Ce n’est pas un graphique de trading professionnel.</div></div>
+    <div class="panel"><div class="section-title">Signaux indicatifs</div><div id="signals"><div class="muted">Analyse en cours…</div></div><div class="small" style="margin-top:12px">Signaux fondés sur une règle simple de tendance, pas sur une prédiction fiable. « Attendre » est une option valide.</div></div>
+  </section>
+  <section class="grid">
+    <div class="panel"><div class="label">Solde simulé</div><div class="price" id="balance">1 000,00 USDT</div><div class="small">Capital virtuel initial</div></div>
+    <div class="panel"><div class="label">Ordres simulés</div><div class="price" id="orders">0</div><div class="small">Aucune transaction réelle n’est envoyée</div></div>
+    <div class="panel"><div class="label">Statut du système</div><div class="price" style="font-size:20px" id="system">En attente</div><div class="small">Aucune clé API ou connexion de portefeuille nécessaire</div></div>
+  </section>
+  <section class="panel"><div class="section-title">Carnet de simulation</div><div class="controls"><select id="asset"><option value="BTCUSDT">BTC/USDT</option><option value="ETHUSDT">ETH/USDT</option><option value="SOLUSDT">SOL/USDT</option></select><input id="amount" type="number" min="10" max="1000" step="10" value="50" aria-label="Montant en USDT" style="width:125px;background:#1a2738;color:white;border:1px solid #33445a;border-radius:9px;padding:10px"><button id="paperBuy">Simuler un achat</button><button id="paperReset">Réinitialiser la simulation</button></div><div id="paperMsg" class="small" style="margin-top:10px">Choisis un actif et un montant pour simuler un achat au prix actuel. La simulation ne prédit pas les profits.</div></section>
+  <div class="footer">Avertissement : outil éducatif, pas un conseil financier. Les prix peuvent être indisponibles ou retardés. Les règles affichées sont rudimentaires et ne garantissent aucun gain. Ne colle jamais de clé secrète d’exchange dans ce fichier ou dans un outil IA.</div>
+</main>
+<script>
+const API='https://data-api.binance.vision/api/v3';
+const symbols=['BTCUSDT','ETHUSDT','SOLUSDT'];
+const state={prices:{},balance:1000,orders:0,positions:[]};
+const fmt=(n)=>Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const $=id=>document.getElementById(id);
+async function get(path){const r=await fetch(API+path);if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}
+async function refresh(){
+ $('status').textContent='Actualisation des données publiques…';$('system').textContent='Connexion…';
+ try{
+  const data=await Promise.all(symbols.map(async s=>({s,t:await get('/ticker/24hr?symbol='+s)})));
+  const coins=$('coins');coins.innerHTML='';
+  data.forEach(({s,t})=>{state.prices[s]=Number(t.lastPrice);const name=s.replace('USDT','');const ch=Number(t.priceChangePercent);const div=document.createElement('div');div.className='coin';div.innerHTML=`<div class="label">${name} · ${s}</div><div class="price">$${fmt(t.lastPrice)}</div><div class="change ${ch>=0?'positive':'negative'}">${ch>=0?'+':''}${ch.toFixed(2)}% <span class="muted">sur 24 h</span></div><div class="small" style="margin-top:9px">Volume : ${Number(t.volume).toLocaleString('en-US',{maximumFractionDigits:1})} ${name}</div>`;coins.appendChild(div);});
+  const k=await get('/klines?symbol=BTCUSDT&interval=1h&limit=24');drawChart(k);renderSignals(k);
+  $('status').textContent='Données reçues : '+new Date().toLocaleTimeString()+' · Source : données publiques Binance';$('system').textContent='Connecté aux données';
+ }catch(e){$('status').innerHTML='<span class="error">Impossible de récupérer les données. Vérifie la connexion ou réessaie plus tard. ('+e.message+')</span>';$('system').textContent='Hors ligne';}
+}
+function drawChart(rows){
+ const c=$('chart'),ctx=c.getContext('2d'),w=c.width,h=c.height;ctx.clearRect(0,0,w,h);
+ const vals=rows.map(r=>[+r[1],+r[2],+r[3],+r[4]]),lo=Math.min(...vals.map(v=>v[2])),hi=Math.max(...vals.map(v=>v[1])),pad=(hi-lo)*.08||1;
+ const min=lo-pad,max=hi+pad,Y=v=>h-18-(v-min)/(max-min)*(h-36),step=w/vals.length;
+ ctx.strokeStyle='#253447';ctx.lineWidth=1;
+ for(let i=0;i<5;i++){let y=18+i*(h-36)/4;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+ vals.forEach((v,i)=>{const x=i*step+step/2,up=v[3]>=v[0];ctx.strokeStyle=up?'#36d399':'#fb7185';ctx.fillStyle=ctx.strokeStyle;ctx.beginPath();ctx.moveTo(x,Y(v[1]));ctx.lineTo(x,Y(v[2]));ctx.stroke();const top=Y(Math.max(v[0],v[3])),bot=Y(Math.min(v[0],v[3]));ctx.fillRect(x-step*.27,top,step*.54,Math.max(2,bot-top));});
+ ctx.fillStyle='#91a0b5';ctx.font='13px system-ui';ctx.fillText('$'+fmt(hi),8,14);ctx.fillText('$'+fmt(lo),8,h-4);
+}
+function renderSignals(rows){
+ const closes=rows.map(r=>+r[4]),last=closes.at(-1),avg=closes.slice(-6).reduce((a,b)=>a+b,0)/6,prev=closes.slice(-12,-6).reduce((a,b)=>a+b,0)/6;
+ let label='ATTENDRE',cls='wait',reason='Tendance courte peu claire selon cette règle simple.';
+ if(last>avg&&avg>prev){label='TENDANCE HAUSSIÈRE';cls='buy';reason='Le dernier prix est au-dessus de la moyenne courte et celle-ci dépasse la moyenne précédente.';}
+ else if(last<avg&&avg<prev){label='TENDANCE BAISSIÈRE';cls='sell';reason='Le dernier prix est sous la moyenne courte et celle-ci est inférieure à la moyenne précédente.';}
+ $('signals').innerHTML=`<div class="signal"><div><strong>BTC/USDT</strong><div class="small">${reason}</div></div><span class="tag ${cls}">${label}</span></div><div class="signal"><div><strong>ETH/USDT</strong><div class="small">Prix actuel : $${fmt(state.prices.ETHUSDT||0)}. Règle avancée non activée.</div></div><span class="tag wait">ATTENDRE</span></div><div class="signal"><div><strong>SOL/USDT</strong><div class="small">Prix actuel : $${fmt(state.prices.SOLUSDT||0)}. Règle avancée non activée.</div></div><span class="tag wait">ATTENDRE</span></div>`;
+}
+function updatePaper(){$('balance').textContent=fmt(state.balance)+' USDT';$('orders').textContent=state.orders;}
+$('paperBuy').onclick=()=>{const sym=$('asset').value,amount=Number($('amount').value),price=state.prices[sym];if(!price){$('paperMsg').textContent='Le prix est indisponible. Actualise d’abord les données.';return;}if(!Number.isFinite(amount)||amount<10||amount>state.balance){$('paperMsg').textContent='Entre un montant valide entre 10 USDT et ton solde simulé.';return;}state.balance-=amount;state.orders++;state.positions.push({sym,amount,qty:amount/price,price});updatePaper();$('paperMsg').textContent=`Achat simulé : ${fmt(amount)} USDT de ${sym} à $${fmt(price)}. Quantité virtuelle : ${(amount/price).toFixed(8)}. Ceci n’est pas un ordre réel.`;};
+$('paperReset').onclick=()=>{state.balance=1000;state.orders=0;state.positions=[];updatePaper();$('paperMsg').textContent='Simulation réinitialisée à 1 000 USDT virtuels.';};
+$('refresh').onclick=refresh;refresh();setInterval(refresh,60000);
+</script>
+</body>
+</html>
